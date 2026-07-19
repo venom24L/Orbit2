@@ -3,6 +3,8 @@ package com.example
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
@@ -12,6 +14,7 @@ import java.util.Date
 import java.util.Locale
 
 object TelegramNotifier {
+    private const val TAG = "TelegramNotifier"
     private val BOT_TOKEN = BuildConfig.TELEGRAM_BOT_TOKEN
     private val CHAT_ID = BuildConfig.TELEGRAM_CHAT_ID
 
@@ -30,14 +33,20 @@ object TelegramNotifier {
                 }
             }
         } catch (e: Exception) {
-            android.util.Log.e("TelegramNotifier", "Failed to detect country: ${e.message}")
+            android.util.Log.e(TAG, "Failed to detect country: ${e.message}", e)
         }
         return null
     }
 
     suspend fun notifyInstall(context: Context): Boolean = withContext(Dispatchers.IO) {
+        android.util.Log.d(TAG, "notifyInstall check started. BOT_TOKEN length: ${BOT_TOKEN.length}, CHAT_ID: '$CHAT_ID'")
+        if (BOT_TOKEN.isEmpty() || CHAT_ID.isEmpty()) {
+            android.util.Log.w(TAG, "Telegram credentials are missing. TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID must be set in your .env / Secrets panel.")
+        }
+
         // Prevent duplicate notifications
         if (ThemePreferences.isInstallNotified(context)) {
+            android.util.Log.d(TAG, "notifyInstall: Already notified before, skipping")
             return@withContext false
         }
 
@@ -59,6 +68,7 @@ object TelegramNotifier {
             }
             
             val urlString = "https://api.telegram.org/bot$BOT_TOKEN/sendMessage"
+            android.util.Log.d(TAG, "Sending Telegram request to URL: https://api.telegram.org/bot[REDACTED]/sendMessage")
             val url = URL(urlString)
             val conn = url.openConnection() as HttpURLConnection
             conn.requestMethod = "POST"
@@ -71,6 +81,8 @@ object TelegramNotifier {
                     "&text=" + URLEncoder.encode(text, "UTF-8") +
                     "&parse_mode=" + URLEncoder.encode("Markdown", "UTF-8")
 
+            android.util.Log.d(TAG, "Telegram POST data: $postData")
+
             conn.outputStream.use { os ->
                 OutputStreamWriter(os, "UTF-8").use { writer ->
                     writer.write(postData)
@@ -79,18 +91,31 @@ object TelegramNotifier {
             }
 
             val responseCode = conn.responseCode
+            android.util.Log.d(TAG, "Telegram HTTP response code: $responseCode")
+
             if (responseCode == HttpURLConnection.HTTP_OK) {
+                val responseBody = conn.inputStream.use { ins ->
+                    BufferedReader(InputStreamReader(ins, "UTF-8")).use { reader ->
+                        reader.readText()
+                    }
+                }
+                android.util.Log.d(TAG, "Telegram API response success: $responseBody")
                 // Successfully notified
                 withContext(Dispatchers.Main) {
                     ThemePreferences.setInstallNotified(context, true)
                 }
                 true
             } else {
-                android.util.Log.e("TelegramNotifier", "Server returned non-OK status: $responseCode")
+                val errorBody = conn.errorStream?.use { err ->
+                    BufferedReader(InputStreamReader(err, "UTF-8")).use { reader ->
+                        reader.readText()
+                    }
+                } ?: "No error stream content"
+                android.util.Log.e(TAG, "Telegram server returned non-OK status: $responseCode, errorBody: $errorBody")
                 false
             }
         } catch (e: Exception) {
-            android.util.Log.e("TelegramNotifier", "Failed to send install notification: ${e.message}")
+            android.util.Log.e(TAG, "Failed to send install notification with complete details", e)
             false
         }
     }
