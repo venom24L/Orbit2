@@ -16,6 +16,22 @@ if (localPropertiesFile.exists()) {
     localProperties.load(localPropertiesFile.inputStream())
 }
 
+val envProperties = Properties()
+val envFile = rootProject.file(".env")
+if (envFile.exists()) {
+    envFile.inputStream().use { envProperties.load(it) }
+}
+
+val tBotToken = envProperties.getProperty("TELEGRAM_BOT_TOKEN")
+    ?: localProperties.getProperty("TELEGRAM_BOT_TOKEN")
+    ?: System.getenv("TELEGRAM_BOT_TOKEN")
+    ?: ""
+
+val tChatId = envProperties.getProperty("TELEGRAM_CHAT_ID")
+    ?: localProperties.getProperty("TELEGRAM_CHAT_ID")
+    ?: System.getenv("TELEGRAM_CHAT_ID")
+    ?: ""
+
 android {
   namespace = "com.example"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
@@ -29,8 +45,8 @@ android {
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-    buildConfigField("String", "TELEGRAM_BOT_TOKEN", "\"${localProperties.getProperty("TELEGRAM_BOT_TOKEN", "")}\"")
-    buildConfigField("String", "TELEGRAM_CHAT_ID", "\"${localProperties.getProperty("TELEGRAM_CHAT_ID", "")}\"")
+    buildConfigField("String", "TELEGRAM_BOT_TOKEN", "\"$tBotToken\"")
+    buildConfigField("String", "TELEGRAM_CHAT_ID", "\"$tChatId\"")
   }
 
   signingConfigs {

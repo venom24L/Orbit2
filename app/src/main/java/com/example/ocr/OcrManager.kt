@@ -137,20 +137,20 @@ object OcrManager {
             }
 
             api.pageSegMode = OCR_PSM
-            Log.d(TAG, "Setting preprocessed image into Tesseract...")
-            api.setImage(preprocessed)
+            Log.d(TAG, "Setting original image into Tesseract first...")
+            api.setImage(bitmap)
             
-            Log.d(TAG, "Extracting UTF8 text from binarized image...")
+            Log.d(TAG, "Extracting UTF8 text from original image...")
             var text = api.utF8Text ?: ""
             
-            // 6. Log recognized text length
-            Log.d(TAG, "Binarized image OCR output text length: ${text.length} chars. Raw preview: '${if (text.length > 50) text.take(50) + "..." else text}'")
+            // Log recognized text length
+            Log.d(TAG, "Original image OCR output text length: ${text.length} chars. Raw preview: '${if (text.length > 50) text.take(50) + "..." else text}'")
 
             if (text.trim().isBlank()) {
-                Log.d(TAG, "Binarized image returned empty text; falling back to original bitmap")
-                api.setImage(bitmap)
+                Log.d(TAG, "Original image returned empty text; falling back to binarized image")
+                api.setImage(preprocessed)
                 text = api.utF8Text ?: ""
-                Log.d(TAG, "Original image OCR output text length: ${text.length} chars. Raw preview: '${if (text.length > 50) text.take(50) + "..." else text}'")
+                Log.d(TAG, "Binarized image OCR output text length: ${text.length} chars. Raw preview: '${if (text.length > 50) text.take(50) + "..." else text}'")
             }
 
             Log.d(TAG, "OCR done: input ${bitmap.width}x${bitmap.height}, final output text length: ${text.length} chars")

@@ -14,6 +14,7 @@ import android.widget.ImageView
 import android.widget.Toast
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -70,6 +71,7 @@ class OverlayActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         activeTabFlow.value = intent.getStringExtra("launch_tab")
         setContent {
@@ -314,6 +316,7 @@ fun OverlayScreen(onDismiss: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .then(if (!isScanOverlayVisible) Modifier.systemBarsPadding() else Modifier)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null

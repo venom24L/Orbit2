@@ -1,5 +1,7 @@
 package com.example.capture
 
+import android.content.Context
+import android.view.WindowManager
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -39,6 +41,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -86,10 +89,16 @@ fun ScreenCaptureOverlay(
                 .fillMaxSize()
                 .background(Color.Transparent)
         ) {
-            val density = LocalDensity.current
-            val configuration = LocalConfiguration.current
-            val screenWPx = with(density) { configuration.screenWidthDp.dp.toPx() }
-            val screenHPx = with(density) { configuration.screenHeightDp.dp.toPx() }
+            val context = LocalContext.current
+            val displayMetrics = remember(context) {
+                val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+                val dm = android.util.DisplayMetrics()
+                @Suppress("DEPRECATION")
+                wm.defaultDisplay.getRealMetrics(dm)
+                dm
+            }
+            val screenWPx = displayMetrics.widthPixels.toFloat()
+            val screenHPx = displayMetrics.heightPixels.toFloat()
 
             // ----------------------------------------------------------------
             // SINGLE source of truth for the selection rectangle.
