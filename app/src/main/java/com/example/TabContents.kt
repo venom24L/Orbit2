@@ -24,7 +24,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -363,44 +369,188 @@ fun VaultTabContent(
             Spacer(modifier = Modifier.height(6.dp))
         }
 
-        // Scan Screen button — full-width, accent-coloured, opens the OCR capture overlay.
-        // Sits above the compose section so it's prominent and always reachable.
-        Row(
+        // Premium Redesigned Flagship OCR Action - Scanner Control Deck
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(accentColor.copy(alpha = 0.15f), RoundedCornerShape(12.dp))
-                .border(1.dp, accentColor.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
-                .clickable { onScanScreen() }
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(bottom = 12.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.DocumentScanner,
-                contentDescription = "Scan Screen icon",
-                tint = accentColor,
-                modifier = Modifier.size(22.dp)
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            Column(modifier = Modifier.weight(1f)) {
+            // Header tag with subtle Live/Ready status
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 4.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .background(accentColor, RoundedCornerShape(50))
+                    )
+                    Text(
+                        text = "SCREEN OPTICS",
+                        color = accentColor.copy(alpha = 0.85f),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.2.sp
+                    )
+                }
+                
                 Text(
-                    text = "Scan Screen (OCR)",
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "Capture a screen region and extract text (English + Arabic)",
-                    color = TextSecondary,
-                    fontSize = 11.sp
+                    text = "[ EN • AR ]",
+                    color = TextSecondary.copy(alpha = 0.5f),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.5.sp
                 )
             }
-            Icon(
-                imageVector = Icons.Default.CameraAlt,
-                contentDescription = "Capture",
-                tint = accentColor,
-                modifier = Modifier.size(20.dp)
-            )
+
+            // The main asymmetrical premium Scanner Panel
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color(0xFF0F1524))
+                    .border(
+                        width = 1.dp,
+                        color = Color.White.copy(alpha = 0.08f),
+                        shape = RoundedCornerShape(14.dp)
+                    )
+                    .padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Left Accent bar + Description Column
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    // Futuristic Neon Vertical Bar
+                    Box(
+                        modifier = Modifier
+                            .width(3.dp)
+                            .height(44.dp)
+                            .background(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(
+                                        accentColor,
+                                        accentColor.copy(alpha = 0.2f)
+                                    )
+                                ),
+                                shape = RoundedCornerShape(1.5.dp)
+                            )
+                    )
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column {
+                        Text(
+                            text = "OCR Screen Capture",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = 0.15.sp
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Extract any text visible on your device screen",
+                            color = TextSecondary.copy(alpha = 0.85f),
+                            fontSize = 12.sp,
+                            lineHeight = 15.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // Interactive Optical Scanner Lens trigger
+                val interactionSource = remember { MutableInteractionSource() }
+                val isPressed by interactionSource.collectIsPressedAsState()
+                val shutterScale by animateFloatAsState(
+                    targetValue = if (isPressed) 0.90f else 1.0f,
+                    label = "ShutterScaleAnimation"
+                )
+                val shutterBgColor by animateColorAsState(
+                    targetValue = if (isPressed) accentColor.copy(alpha = 0.35f) else accentColor.copy(alpha = 0.15f),
+                    label = "ShutterBgAnimation"
+                )
+                val shutterBorderColor by animateColorAsState(
+                    targetValue = if (isPressed) accentColor else accentColor.copy(alpha = 0.5f),
+                    label = "ShutterBorderAnimation"
+                )
+
+                Box(
+                    modifier = Modifier
+                        .graphicsLayer {
+                            scaleX = shutterScale
+                            scaleY = shutterScale
+                        }
+                        .size(52.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(shutterBgColor)
+                        .border(
+                            width = 1.dp,
+                            color = shutterBorderColor,
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        .clickable(
+                            interactionSource = interactionSource,
+                            indication = androidx.compose.foundation.LocalIndication.current,
+                            onClick = onScanScreen
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .border(
+                                width = 1.dp,
+                                color = accentColor.copy(alpha = 0.3f),
+                                shape = RoundedCornerShape(10.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DocumentScanner,
+                            contentDescription = "Trigger Screen Scan",
+                            tint = accentColor,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Non-intrusive informational notice directly below the OCR action (subtle Card chip)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xFF0F1524).copy(alpha = 0.5f))
+                    .border(0.5.dp, accentColor.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = "Info Icon",
+                    tint = accentColor.copy(alpha = 0.6f),
+                    modifier = Modifier.size(13.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(id = R.string.ocr_best_results),
+                    color = TextSecondary.copy(alpha = 0.8f),
+                    fontSize = 11.sp,
+                    lineHeight = 14.sp
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(10.dp))

@@ -51,4 +51,5 @@
     <string name="overlay_close">إغلاق</string>
     <string name="permission_skip">تخطي</string>
     <string name="permission_skipped">تم التخطي</string>
+    <string name="ocr_best_results">لأفضل النتائج، استخدم نصًا باللغة الإنجليزية.</string>
 </resources>
